@@ -1,0 +1,13 @@
+.sql-keyword {
+    color: #e12b00;
+    background-color: #b5f4f6;
+    border: 1px solid #333;
+}
+
+.function-input {
+    background-color: #f3c7b8;
+    border: 1px solid #333;
+    border-radius: 3px;
+    padding: 1px 1px;
+    margin: 1px 0;
+}

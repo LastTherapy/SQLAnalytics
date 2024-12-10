@@ -1,0 +1,94 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Table Dependencies</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f4f4f9;
+                position: relative;
+                width: 100vw;
+                height: 100vh;
+            }
+            .container {
+                position: relative;
+                width: 100%;
+                height: 100%;
+            }
+            .source, .destination {
+                position: absolute;
+                padding: 10px 20px;
+                border: 2px solid #333;
+                border-radius: 8px;
+                text-align: center;
+                background-color: #FFD700; /* Желтый */
+            }
+            .destination {
+                background-color: #87CEFA; /* Голубой */
+            }
+            svg {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1; /* Помещаем стрелки за блоки */
+            }
+            line {
+                stroke-width: 2;
+                stroke: black;
+                marker-end: url(#arrowhead); /* Добавляем стрелку на конец */
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+    <div class="source" id="source1" style="top: 10%; left: 20%; ">schema1.table1</div>
+<div class="source" id="source2" style="top: 10%; left: 50%; ">schema2.table2</div>
+<div class="source" id="source3" style="top: 10%; left: 80%; ">schema3.table3</div>
+<div class="destination" id="destination" style="bottom: 10%; left: 50%; transform: translateX(-50%);">schema4.destination_table</div>
+
+        <svg>
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="black" />
+                </marker>
+            </defs>
+        </svg>
+        </div>
+        <script>
+            function drawArrow(svg, fromElement, toElement) {
+                const svgRect = svg.getBoundingClientRect();
+                const fromRect = fromElement.getBoundingClientRect();
+                const toRect = toElement.getBoundingClientRect();
+
+                // Координаты начальной и конечной точки
+                const startX = fromRect.left + fromRect.width / 2 - svgRect.left;
+                const startY = fromRect.bottom - svgRect.top;
+                const endX = toRect.left + toRect.width / 2 - svgRect.left;
+                const endY = toRect.top - svgRect.top;
+
+                // Создаем линию
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", startX);
+                line.setAttribute("y1", startY);
+                line.setAttribute("x2", endX);
+                line.setAttribute("y2", endY);
+                svg.appendChild(line);
+            }
+
+            const svg = document.querySelector("svg");
+            const destination = document.getElementById('destination');
+    drawArrow(svg, document.getElementById('source1'), destination);
+drawArrow(svg, document.getElementById('source2'), destination);
+drawArrow(svg, document.getElementById('source3'), destination);
+
+        </script>
+    </body>
+    </html>
+    

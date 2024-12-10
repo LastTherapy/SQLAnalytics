@@ -1,0 +1,5 @@
+insert into dst_tableAX
+select 1, 2, 3, 4, 5
+from source_tableBX
+join source_tableCX on source_tableBX.id = source_tableCX.id
+join source_tableDX on source_tableBX.id = source_tableDX.id
