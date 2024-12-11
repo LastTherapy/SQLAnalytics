@@ -17,6 +17,7 @@ class SQLFunction:
         return f"{self.schema_name}.{self.function_name}"
 
     def keyword_highlight(self):
+
         for keyword in keywords:
             # Замена слова с учётом нечувствительности к регистру
             self.function_ddl = re.sub(
@@ -27,6 +28,9 @@ class SQLFunction:
             )
 
     def input_highlight(self):
+        # SQL function have no arguments
+        if len(self.arguments) == 1 and self.arguments[0] == '':
+            return
         for argument in self.arguments:
             # Замена слова с учётом нечувствительности к регистру
             self.function_ddl = re.sub(
@@ -36,3 +40,5 @@ class SQLFunction:
                 flags=re.IGNORECASE  # Игнорировать регистр
             )
 
+    def prepare_for_hatml(self):
+        self.function_ddl = self.function_ddl.replace('\n', '<br>')

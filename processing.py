@@ -4,25 +4,9 @@ from os import path
 from typing import List
 
 from model.SQLFunction import SQLFunction
+from utils.dataloader import load_functions
 
-datapath = path.abspath(path.dirname(__file__))
-filepath = os.path.join(datapath, 'data')
-datalist = os.listdir(filepath)
-
-funcs: List[SQLFunction] = []
-
-for file in datalist:
-    with (open(os.path.join(filepath, file), 'r') as f):
-        for i, line in enumerate(f):
-            if i >= 2:
-                args = list(line[1:-1].strip().split('|'))
-                func_params: List = [a.strip().split(' ')[0] for a in args[3].split(',')]
-                f: SQLFunction = SQLFunction(args[0].strip(), args[1].strip(), args[2].strip(),
-                                             func_params, args[4].strip().replace('¶', '<br>'))
-                print(f.arguments)
-                f.keyword_highlight()
-                f.input_highlight()
-                funcs.append(f)
+funcs: List[SQLFunction] = load_functions()
 
 
 
@@ -87,9 +71,6 @@ def generate_function_htmls(functions: List[SQLFunction], output_dir="output", i
 
     print(f"HTML-страница сгенерирована: {index_file}")
 
+[(f.input_highlight(), f.keyword_highlight(), f.prepare_for_hatml()) for f in funcs]
 
-# Пример использования
-functions_list = ["my_function", "another_function", "calculate_sum", "get_data"]
-str_funcs = [str(f) for f in funcs]
-print(str_funcs)
 generate_function_htmls(funcs)

@@ -1,4 +1,7 @@
 .idea
 venv
 .DS_Store
-.html
+*.html
+*.json
+*.txt
+*.pyc

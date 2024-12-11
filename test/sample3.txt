@@ -1,5 +1,0 @@
-sql_query = """
-INSERT INTO schema4.destination_table
-SELECT col1, col2, col3
-FROM schema1.table1, schema2.table2, schema3.table3
-"""
