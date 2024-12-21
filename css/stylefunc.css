@@ -1,0 +1,81 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+.sql-keyword {
+    color: #d14;
+    font-weight: bold;
+}
+
+.function-input {
+    color: #099;
+}
+
+.function-label {
+    color: #c00;
+    font-weight: bold;
+}
+
+/* Всплывающее окно */
+.tooltip-box {
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    display: none;
+    z-index: 1000;
+    max-width: 300px;
+    word-wrap: break-word;
+    font-size: 14px;
+    pointer-events: none; /* Предотвращает захват событий мыши подсказкой */
+}
+
+/* Стилизация таблицы внутри подсказки */
+.tooltip-box table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 5px;
+}
+
+.tooltip-box table, .tooltip-box th, .tooltip-box td {
+    border: 1px solid #ccc;
+}
+
+.tooltip-box th {
+    background-color: #444;
+    color: #fff;
+    text-align: left;
+    padding: 5px;
+}
+
+.tooltip-box td {
+    background-color: #f9f9f9;
+    color: #000;
+    text-align: left;
+    padding: 5px;
+}
+
+/* Стилизация ссылок на функции */
+a {
+    background-color: #d0f0d0; /* Светло-зелёный фон для квадратиков */
+    padding: 5px 8px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    display: inline-block;
+    margin: 2px 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+a:hover {
+    background-color: #28a745; /* Тёмно-зелёный при наведении */
+    color: #fff;
+}
+
+/* Стилизация таблиц для лучшего отображения */
+p {
+    white-space: pre-wrap;
+}

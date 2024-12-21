@@ -1,58 +1,61 @@
-
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Table Dependencies</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-                background-color: #f4f4f9;
-                position: relative;
-                width: 100vw;
-                height: 100vh;
-            }
-            .container {
-                position: relative;
-                width: 100%;
-                height: 100%;
-            }
-            .source, .destination {
-                position: absolute;
-                padding: 10px 20px;
-                border: 2px solid #333;
-                border-radius: 8px;
-                text-align: center;
-                background-color: #FFD700; /* Желтый */
-            }
-            .destination {
-                background-color: #87CEFA; /* Голубой */
-            }
-            svg {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: -1; /* Помещаем стрелки за блоки */
-            }
-            line {
-                stroke-width: 2;
-                stroke: black;
-                marker-end: url(#arrowhead); /* Добавляем стрелку на конец */
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-    <div class="source" id="source1" style="top: 10%; left: 20%; ">schema1.table1</div>
-<div class="source" id="source2" style="top: 10%; left: 50%; ">schema2.table2</div>
-<div class="source" id="source3" style="top: 10%; left: 80%; ">schema3.table3</div>
-<div class="destination" id="destination" style="bottom: 10%; left: 50%; transform: translateX(-50%);">schema4.destination_table</div>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic SVG Connections</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            background-color: purple;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 1.5em;
+        }
+        .container {
+            display: flex;
+            position: relative;
+        }
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .sources {
+            margin-right: 100px; /* Располагаем destinations на 100px справа */
+        }
+        .box {
+            width: 150px;
+            height: 50px;
+            border: 1px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .source {
+            background-color: lightgreen;
+        }
+        .destination {
+            background-color: lightblue;
+        }
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Название функции<   /div>
+    <div class="container" id="diagram-container">
+        <div class="column sources" id="sources"></div>
         <svg>
             <defs>
                 <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
@@ -60,35 +63,88 @@
                 </marker>
             </defs>
         </svg>
-        </div>
-        <script>
-            function drawArrow(svg, fromElement, toElement) {
-                const svgRect = svg.getBoundingClientRect();
-                const fromRect = fromElement.getBoundingClientRect();
-                const toRect = toElement.getBoundingClientRect();
+        <div class="column destinations" id="destinations"></div>
+    </div>
 
-                // Координаты начальной и конечной точки
-                const startX = fromRect.left + fromRect.width / 2 - svgRect.left;
-                const startY = fromRect.bottom - svgRect.top;
-                const endX = toRect.left + toRect.width / 2 - svgRect.left;
-                const endY = toRect.top - svgRect.top;
+    <script>
+        const data = {
+            "destination1": ["source1", "source3"],
+            "destination2": ["source2"]
+        };
 
-                // Создаем линию
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", startX);
-                line.setAttribute("y1", startY);
-                line.setAttribute("x2", endX);
-                line.setAttribute("y2", endY);
-                svg.appendChild(line);
-            }
+        function generateElements(container, data) {
+            const sourcesContainer = document.getElementById('sources');
+            const destinationsContainer = document.getElementById('destinations');
 
+            // Создаем элементы источников
+            const sources = new Set();
+            Object.values(data).forEach(sourceList => sourceList.forEach(source => sources.add(source)));
+
+            sources.forEach(id => {
+                const div = document.createElement('div');
+                div.id = id;
+                div.className = 'box source';
+                div.textContent = id;
+                sourcesContainer.appendChild(div);
+            });
+
+            // Создаем элементы целей
+            Object.keys(data).forEach(id => {
+                const div = document.createElement('div');
+                div.id = id;
+                div.className = 'box destination';
+                div.textContent = id;
+                destinationsContainer.appendChild(div);
+            });
+        }
+
+        function drawArrow(svg, fromElement, toElement) {
+            const svgRect = svg.getBoundingClientRect();
+            const fromRect = fromElement.getBoundingClientRect();
+            const toRect = toElement.getBoundingClientRect();
+
+            // Координаты начальной и конечной точки
+            const startX = fromRect.right - svgRect.left;
+            const startY = fromRect.top + fromRect.height / 2 - svgRect.top;
+            const endX = toRect.left - svgRect.left;
+            const endY = toRect.top + toRect.height / 2 - svgRect.top;
+
+            // Создаем линию
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", startX);
+            line.setAttribute("y1", startY);
+            line.setAttribute("x2", endX);
+            line.setAttribute("y2", endY);
+            line.setAttribute("stroke", "black");
+            line.setAttribute("stroke-width", "2");
+            line.setAttribute("marker-end", "url(#arrowhead)");
+            svg.appendChild(line);
+        }
+
+        function drawConnections(svg, data) {
+            Object.entries(data).forEach(([to, fromList]) => {
+                fromList.forEach(from => {
+                    const fromElement = document.getElementById(from);
+                    const toElement = document.getElementById(to);
+
+                    if (fromElement && toElement) {
+                        drawArrow(svg, fromElement, toElement);
+                    } else {
+                        console.warn(`Invalid connection: ${from} -> ${to}`);
+                    }
+                });
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
             const svg = document.querySelector("svg");
-            const destination = document.getElementById('destination');
-    drawArrow(svg, document.getElementById('source1'), destination);
-drawArrow(svg, document.getElementById('source2'), destination);
-drawArrow(svg, document.getElementById('source3'), destination);
 
-        </script>
-    </body>
-    </html>
-    
+            // Генерируем элементы
+            generateElements(document.getElementById('diagram-container'), data);
+
+            // Отрисовываем связи
+            drawConnections(svg, data);
+        });
+    </script>
+</body>
+</html>

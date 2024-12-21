@@ -1,34 +1,50 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
     display: flex;
     height: 100vh;
-}
-nav {
-    width: 20%;
-    background-color: #f4f4f9;
-    border-right: 1px solid #ddd;
-    padding: 20px;
-    overflow-y: auto;
-}
-iframe {
-    width: 70%;
-    border: none;
-    height: 100%;
-}
-ul {
-    list-style-type: none;
-    padding: 0;
-}
-li {
-    margin: 5px 0;
-}
-a {
-    text-decoration: none;
-    color: #007bff;
-}
-a:hover {
-    text-decoration: underline;
+    margin: 0;
 }
 
+nav {
+    width: 20%;
+    padding: 20px;
+    background-color: #f4f4f4;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    overflow-y: auto; /* Вертикальная прокрутка */
+    overflow-x: auto; /* Горизонтальная прокрутка */
+}
+
+nav h2 {
+    margin-top: 0;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav li {
+    margin-bottom: 10px;
+}
+
+nav a {
+    text-decoration: none;
+    display: inline-block;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #e0e0e0; /* Фон для квадратиков */
+    color: #333;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+nav a:hover {
+    background-color: #007BFF;
+    color: #fff;
+}
+
+iframe[name="content"] {
+    width: 80%;
+    height: 100vh;
+    border: none;
+}

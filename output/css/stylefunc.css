@@ -19,3 +19,11 @@
     padding: 2px 1px;
     margin: 1px 0;
 }
+
+.table-label {
+    background-color: #06f1d6;
+    border: 2px solid #333;
+    border-radius: 5px;
+    padding: 2px 1px;
+    margin: 1px 0;
+}
