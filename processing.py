@@ -1,91 +1,109 @@
-# generate_html.py
-
 import os
 import re
 import json
+import time
 from typing import List
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 # Предполагается, что SQLFunction и SQLTable импортируются корректно
 from model.SQLFunction import SQLFunction
 from model.SQLTable import SQLTable  # Обязательно создайте этот модуль
 from utils.dataloader import load_functions, load_tables
 
-def wrap_table_names_in_function(function: SQLFunction, tables: List[SQLTable]) -> None:
+def process_and_write_html(func: SQLFunction, tables: List[SQLTable], functions: List[SQLFunction],
+                           output_dir: str) -> None:
     """
-    Оборачивает имена таблиц в function_ddl функции.
-
-    :param function: Объект SQLFunction.
-    :param tables: Список объектов SQLTable.
+    Обрабатывает одну функцию: выполняет все этапы обработки DDL и записывает HTML-файлы для этой функции.
     """
-    print(f"Оборачиваем таблицы для функции: {function}")
-    function.wrap_table_names(tables)
-    print(f"Завершена обработка таблиц для функции: {function}")
+    print(f"Начинаем обработку: {func}")
 
-def wrap_function_names_in_function(function: SQLFunction, functions: List[SQLFunction]) -> None:
-    """
-    Оборачивает имена других функций в DDL функции на ссылки.
+    # Выполняем все этапы обработки DDL
+    func.process_all_highlights(tables, functions)
 
-    :param function: Объект SQLFunction.
-    :param functions: Список объектов SQLFunction.
-    """
-    print(f"Оборачиваем имена функций для функции: {function}")
-    function.wrap_function_names(functions)
-    print(f"Завершена обработка имен функций для функции: {function}")
+    # Определяем пути для HTML-файлов
+    visual_html_path = os.path.join(output_dir, f"{str(func)}_visual.html")
+    text_html_path = os.path.join(output_dir, f"{str(func)}_text.html")
 
-def generate_function_htmls(functions: List[SQLFunction], tables: List[SQLTable], output_dir="output", index_file="index.html"):
-    """
-    Генерирует HTML-страницу с iframe:
-    - Левый список функций.
-    - Правый iframe для отображения содержимого выбранной функции.
-    - Генерирует отдельные HTML для каждой функции с подсказками для таблиц и ссылками на другие функции.
-
-    :param functions: Список функций.
-    :param tables: Список таблиц.
-    :param output_dir: Директория для файлов функций.
-    :param index_file: Имя главного HTML-файла.
-    """
-    print(f"Создаём директорию '{output_dir}' если её нет")
-    # Убедимся, что директория для файлов существует
-    os.makedirs(output_dir, exist_ok=True)
-
-    # Генерация отдельных HTML для каждой функции
-    for idx, function in enumerate(functions, start=1):
-        print(f"Обрабатываем функцию {idx}/{len(functions)}: {function}")
-        # Оборачиваем имена таблиц в DDL
-        wrap_table_names_in_function(function, tables)
-        # Оборачиваем имена других функций на ссылки
-        wrap_function_names_in_function(function, functions)
-
-        function_html_path = os.path.join(output_dir, f"{str(function)}.html")
-        print(f"Записываем HTML файл: {function_html_path}")
-        try:
-            with open(function_html_path, "w", encoding="utf-8") as f:
-                f.write(f"""<!DOCTYPE html>
+    try:
+        # Генерируем визуальную часть
+        with open(visual_html_path, "w", encoding="utf-8") as f:
+            f.write(f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/stylefunc.css">
-    <title>{str(function)}</title>
+    <title>Визуализация: {str(func)}</title>
 </head>
 <body>
-    <h1>Функция: {str(function)}</h1>
-    <p>{function.function_ddl}</p>
-
-    <!-- Включение JavaScript для подсказок -->
-    <script src="../js/tooltip.js"></script>
+    <h1>Визуализация функции: {str(func)}</h1>
+    <p>Здесь будет графическая или визуальная часть функции.</p>
+    <a href="{str(func)}_text.html">Перейти к тексту</a>
+    <!-- Включение JavaScript для визуализации -->
+    <script src="../js/visualization.js"></script>
 </body>
 </html>
 """)
-            print(f"HTML файл '{function_html_path}' успешно создан.")
-        except Exception as e:
-            print(f"Ошибка при записи файла {function_html_path}: {e}")
+
+        # Генерируем текстовую часть
+        with open(text_html_path, "w", encoding="utf-8") as f:
+            f.write(f"""<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/stylefunc.css">
+    <title>Текст: {str(func)}</title>
+</head>
+<body>
+    <h1>Текст функции: {str(func)}</h1>
+    <pre>{func.function_ddl}</pre>
+    <a href="{str(func)}_visual.html">Перейти к визуализации</a>
+</body>
+</html>
+""")
+
+    except Exception as e:
+        print(f"Ошибка при записи файлов для функции {str(func)}: {e}")
+
+def generate_function_htmls(functions: List[SQLFunction], tables: List[SQLTable],
+                            output_dir="output", index_file="index.html"):
+    """
+    Генерирует HTML-страницу cо списком функций (слева) и iframe (справа),
+    а также отдельные HTML для каждой функции.
+    """
+    print(f"Создаём директорию '{output_dir}' (если нет).")
+    os.makedirs(output_dir, exist_ok=True)
+
+    total_funcs = len(functions)
+    print(f"Всего функций для обработки: {total_funcs}.")
+
+    # Определяем количество рабочих процессов
+    num_workers = os.cpu_count() or 4
+    print(f"Используем {num_workers} процессов для обработки.")
+
+    # Генерация отдельных HTML для каждой функции с использованием многопроцессорности
+    with ProcessPoolExecutor(max_workers=num_workers) as executor:
+        futures = []
+        for func in functions:
+            future = executor.submit(process_and_write_html, func, tables, functions, output_dir)
+            futures.append(future)
+
+        # Отслеживаем завершение задач с прогрессом
+        done_count = 0
+        for future in as_completed(futures):
+            done_count += 1
+            try:
+                future.result()  # если была ошибка внутри, она всплывёт тут
+                print(f"Обработано {done_count}/{total_funcs} функций.")
+            except Exception as e:
+                print(f"Ошибка при обработке функции: {e}")
 
     # Генерация главной страницы
-    print(f"Создаём главную страницу '{index_file}'")
+    print(f"Формируем главный файл '{index_file}'.")
     try:
         with open(index_file, "w", encoding="utf-8") as f:
-            f.write(f"""<!DOCTYPE html>
+            f.write("""<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -101,7 +119,10 @@ def generate_function_htmls(functions: List[SQLFunction], tables: List[SQLTable]
             # Добавляем ссылки на функции
             for function in functions:
                 f.write(
-                    f'            <li><a href="{output_dir}/{str(function)}.html" target="content">{function.function_name}</a></li>\n')
+                    f'            <li><a href="{output_dir}/{str(function)}_visual.html" target="content">'
+                    f'{function.function_name}</a></li>\n'
+                )
+
             f.write("""
         </ul>
     </nav>
@@ -109,28 +130,25 @@ def generate_function_htmls(functions: List[SQLFunction], tables: List[SQLTable]
 </body>
 </html>
 """)
-        print(f"Главная страница '{index_file}' успешно создана.")
     except Exception as e:
         print(f"Ошибка при записи главной страницы {index_file}: {e}")
 
-    print(f"HTML-страницы сгенерированы в директории: {output_dir}")
-    print(f"Главная страница: {index_file}")
-
+    print(f"Готово. Все HTML-страницы сгенерированы в директории: '{output_dir}'.")
 
 if __name__ == "__main__":
+    start_time = time.perf_counter()
+
     print("Загрузка функций...")
     funcs: List[SQLFunction] = load_functions()
-    print(f"Загружено {len(funcs)} функций:")
-    for func in funcs:
-        print(f"  - {func}")
+    print(f"Загружено {len(funcs)} функций.")
 
     print("Загрузка таблиц...")
     tables: List[SQLTable] = load_tables()
-    print(f"Загружено {len(tables)} таблиц:")
-    for table in tables:
-        print(f"  - {table}")
+    print(f"Загружено {len(tables)} таблиц.")
 
-    # print(tables)
-    print("Начинаем генерацию HTML-страниц.")
+    print("Начинаем генерацию HTML-страниц...")
     generate_function_htmls(funcs, tables)
-    print("Генерация HTML завершена.")
+
+    end_time = time.perf_counter()
+    elapsed_time = end_time - start_time
+    print(f"Генерация HTML завершена за {elapsed_time:.2f} секунд.")

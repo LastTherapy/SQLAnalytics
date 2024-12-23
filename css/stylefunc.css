@@ -37,6 +37,7 @@ body {
 .tooltip-box table {
     border-collapse: collapse;
     width: 100%;
+    background-color: #06f1d6;
     margin-top: 5px;
 }
 
@@ -78,4 +79,41 @@ a:hover {
 /* Стилизация таблиц для лучшего отображения */
 p {
     white-space: pre-wrap;
+}
+
+
+.table-tooltip {
+    background-color: #06f1d6; /* Светло-серый фон */
+    padding: 2px 4px; /* Внутренние отступы */
+    border-radius: 4px; /* Скругленные углы */
+    cursor: pointer; /* Указатель мыши при наведении */
+    transition: background-color 0.3s, color 0.3s; /* Плавный переход стилей */
+    border: 1px solid black;
+}
+
+.table-tooltip:hover {
+    background-color: #81c784; /* Зеленый фон при наведении */
+    color: #fff; /* Белый текст при наведении */
+}
+
+.function-link {
+    background-color: #d0f0d0; /* Светло-зелёный фон */
+    padding: 2px 4px; /* Внутренние отступы */
+    border-radius: 4px; /* Скругленные углы */
+    text-decoration: none; /* Убираем подчеркивание */
+    color: #333; /* Тёмный текст */
+    display: inline-block; /* Вспомогательный стиль для удобства */
+    transition: background-color 0.3s, color 0.3s; /* Плавный переход стилей */
+}
+
+.function-link:hover {
+    background-color: #28a745; /* Тёмно-зелёный при наведении */
+    color: #fff; /* Белый текст при наведении */
+}
+
+.sql-comment {
+    color: #6c757d; /* Серый цвет текста */
+    font-style: italic; /* Курсив */
+    display: block; /* Отображение как отдельный блок */
+    margin: 2px 0; /* Минимальные отступы сверху и снизу */
 }
