@@ -117,3 +117,13 @@ p {
     display: block; /* Отображение как отдельный блок */
     margin: 2px 0; /* Минимальные отступы сверху и снизу */
 }
+.switch-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+}

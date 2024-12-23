@@ -1,24 +1,47 @@
 import os
 from os import path
-from typing import List
+from typing import List, Dict
 import json
 from model.SQLFunction import SQLFunction
 from model.SQLTable import SQLTable
 
 
-def load_functions() -> List[SQLFunction]:
+# def load_functions() -> List[SQLFunction]:
+#     datapath = path.abspath(path.dirname(__file__))
+#     datapath = os.path.dirname(datapath)
+#     filepath = os.path.join(datapath, 'data', 'functions')
+#     datalist = os.listdir(filepath)
+#     functions: List[SQLFunction] = []
+#     for file in datalist:
+#         if file.endswith('.json'):
+#             with (open(os.path.join(filepath, file), 'r') as f):
+#                 data = json.loads(f.read())
+#                 functions.extend([SQLFunction(d['schema_name'], d['function_name'], d['return_type'],
+#                                               [a.strip().split(' ')[0] for a in d['arguments'].split(',')],
+#                                               d['function_definition']) for d in data])
+#     return functions
+
+def load_functions() -> Dict[str, SQLFunction]:
+    """Загружает данные из JSON-файлов в объекты SQLFunction и возвращает их в виде словаря."""
     datapath = path.abspath(path.dirname(__file__))
     datapath = os.path.dirname(datapath)
     filepath = os.path.join(datapath, 'data', 'functions')
     datalist = os.listdir(filepath)
-    functions: List[SQLFunction] = []
+    functions: Dict[str, SQLFunction] = {}
+
     for file in datalist:
         if file.endswith('.json'):
-            with (open(os.path.join(filepath, file), 'r') as f):
+            with open(os.path.join(filepath, file), 'r') as f:
                 data = json.loads(f.read())
-                functions.extend([SQLFunction(d['schema_name'], d['function_name'], d['return_type'],
-                                              [a.strip().split(' ')[0] for a in d['arguments'].split(',')],
-                                              d['function_definition']) for d in data])
+                for entry in data:
+                    key = f"{entry['schema_name'].lower()}.{entry['function_name'].lower()}"
+                    functions[key] = SQLFunction(
+                        schema_name=entry['schema_name'],
+                        function_name=entry['function_name'],
+                        return_type=entry['return_type'],
+                        arguments=[a.strip().split(' ')[0] for a in entry['arguments'].split(',')],
+                        function_definition=entry['function_definition'],
+                    )
     return functions
 
 
@@ -27,30 +50,28 @@ def parse_list_from_string(value: str) -> List[str]:
     return value.strip("{}").split(",")
 
 
-def load_tables() -> List[SQLTable]:
+def load_tables() -> Dict[str, SQLTable]:
     """Загружает данные из JSON-файлов в объекты SQLTable."""
     datapath = path.abspath(path.dirname(__file__))
     datapath = os.path.dirname(datapath)
     filepath = os.path.join(datapath, 'data', 'tables')
     datalist = os.listdir(filepath)
-    tables: List[SQLTable] = []
+    tables: Dict[str, SQLTable] = {}
 
     for file in datalist:
         if file.endswith('.json'):
             with open(os.path.join(filepath, file), 'r') as f:
                 data = json.loads(f.read())
-                tables.extend([
-                    SQLTable(
+                for entry in data:
+                    tables[f"{entry['table_schema'].lower()}.{entry['table_name'].lower()}"] = SQLTable(
                         schema_name=entry["table_schema"],
                         table_name=entry["table_name"],
                         columns=parse_list_from_string(entry["column_names"]),
                         data_types=parse_list_from_string(entry["data_types"]),
                     )
-                    for entry in data
-                ])
     return tables
 
 
 if __name__ == '__main__':
-    load_tables()
-    print(SQLTable.table_names)
+    f = load_functions()
+    print(f.keys())
