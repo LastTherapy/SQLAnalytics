@@ -117,13 +117,30 @@ p {
     display: block; /* Отображение как отдельный блок */
     margin: 2px 0; /* Минимальные отступы сверху и снизу */
 }
+/*.switch-button {*/
+/*            position: fixed;*/
+/*            top: 10px;*/
+/*            right: 10px;*/
+/*            padding: 10px 15px;*/
+/*            background-color: #007BFF;*/
+/*            color: white;*/
+/*            text-decoration: none;*/
+/*            border-radius: 5px;*/
+/*}*/
 .switch-button {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 10px 15px;
-            background-color: #007BFF;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    background-color: #007BFF;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.switch-button:hover {
+    background-color: #0056b3;
 }
