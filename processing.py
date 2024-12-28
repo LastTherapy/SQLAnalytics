@@ -66,21 +66,15 @@ def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunctio
     <script src="../libs/js/select2.min.js"></script>
     <script src="../libs/js/d3.min.js" charset="utf-8"></script>
     <script src="../libs/js/nv.d3.js"></script>
-    <script src="../js/frames.js" defer></script>
+    <script src="../js/zoom-script.js" defer></script>
     <title>{str(func)} - Граф зависимостей</title>
 </head>
 <body>
-    <!-- Кнопка переключения на текстовую страницу -->
-    <button class="switch-button" onclick="switchPage('{str(func)}')">Перейти к DDL</button>
-    <div class="row" style="text-align:center;margin-left:auto;margin-right:auto;">
-        <div class="col s10 offset-s1">
-            <div class="card" style="display:block">
-                <div class="card-content">
-                    <div class="mermaid">
-                        graph TB
-                        {graph_content}
-                    </div>
-                </div>
+    <div class="zoom-container" id="zoom-container">
+        <div class="zoom-content" id="zoom-content">
+            <div class="mermaid">
+                graph TB
+                {graph_content}
             </div>
         </div>
     </div>
@@ -97,36 +91,6 @@ def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunctio
     except Exception as e:
         print(f"Ошибка при сохранении графа для функции {str(func)}: {e}")
 
-
-#
-# def generate_html_text_page(func: SQLFunction, output_dir: str) -> None:
-#     """
-#     Обрабатывает одну функцию: выполняет все этапы обработки DDL и записывает HTML-файлы для этой функции.
-#     """
-#     text_html_path = os.path.join(output_dir, f"{str(func)}_text.html")
-#     try:
-#         # Генерируем текстовую часть
-#         with open(text_html_path, "w", encoding="utf-8") as f:
-#             f.write(f"""<!DOCTYPE html>
-# <html lang="ru">
-# <head>
-#     <meta charset="UTF-8">
-#     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-#     <link rel="stylesheet" href="../css/stylefunc.css">
-#     <script src="../js/tooltip.js"></script>
-#     <title>{str(func)}</title>
-# </head>
-# <body>
-#     <h1>{str(func)}</h1>
-#     </pre>
-#     <!-- Переключатель на визуальную страницу -->
-#     <a href="{str(func)}_visual.html" target="content" class="switch-button">Перейти к визуализации</a>
-#     <pre>{func.function_definition}</pre>
-# </body>
-# </html>
-# """)
-#     except Exception as e:
-#         print(f"Ошибка при записи файлов для функции {str(func)}: {e}")
 
 def generate_html_text_page(func: SQLFunction, output_dir: str) -> None:
     """
@@ -147,8 +111,6 @@ def generate_html_text_page(func: SQLFunction, output_dir: str) -> None:
     <title>{str(func)}</title>
 </head>
 <body>
-    <!-- Кнопка переключения режима -->
-    <button class="switch-button" onclick="switchPage('{str(func)}')">Переключить на визуализацию</button>
     <h1>{str(func)}</h1>
     <pre>{func.function_definition}</pre>
 </body>
@@ -171,8 +133,6 @@ def generate_html_text_page(func: SQLFunction, output_dir: str) -> None:
     <title>{str(func)} - Визуализация</title>
 </head>
 <body>
-    <!-- Кнопка переключения режима -->
-    <button class="switch-button" onclick="switchPage('{str(func)}')">Переключить на текст</button>
     <h1>{str(func)} - Визуализация</h1>
     <div>Визуализация для функции {str(func)}</div>
 </body>
@@ -182,12 +142,12 @@ def generate_html_text_page(func: SQLFunction, output_dir: str) -> None:
         print(f"Ошибка при записи файлов для функции {str(func)}: {e}")
 
 
-
 def generate_function_htmls(functions: Dict[str, SQLFunction],
                             output_dir="output", index_file="index.html"):
     """
-    Генерирует HTML-страницу cо списком функций (слева) и iframe (справа),
+    Генерирует HTML-страницу со списком функций (слева) и iframe (справа),
     а также отдельные HTML для каждой функции.
+    Кнопка переключения режима перемещена в навигационную панель.
     """
     print(f"Создаём директорию '{output_dir}' (если нет).")
     os.makedirs(output_dir, exist_ok=True)
@@ -205,23 +165,47 @@ def generate_function_htmls(functions: Dict[str, SQLFunction],
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Function Viewer</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/switchmode.css">
+    <script src="libs/js/jquery-2.1.1.min.js"></script>
+    <script src="libs/js/materialize.min.js"></script>
+    <script src="libs/js/select2.min.js"></script>
+    <script src="libs/js/d3.min.js" charset="utf-8"></script>
+    <script src="libs/js/nv.d3.js"></script>
+    <script src="libs/js/mermaid.js"></script>
+    <script src="js/frames.js" defer></script>
+    <script src="js/zoom-script.js" defer></script>
+    <script src="js/switchmode.js" defer></script>
 </head>
 <body>
     <nav>
+
+        <div class="switch-container">
+            <button id="mode-button" class="switch-button" onclick="switchMode()">Переключить на визуализацию</button>
+        </div>
         <h2>Список функций</h2>
         <ul>
 """)
             # Добавляем ссылки на функции
             for _, function in functions.items():
                 f.write(
-                    f'            <li><a href="{output_dir}/{str(function)}_text.html" target="content">'
+                    f'            <li><a href="output/{str(function)}_text.html" target="content" class="function-link" data-function="{str(function)}">'
                     f'{function.function_name}</a></li>\n'
                 )
 
             f.write("""
         </ul>
     </nav>
-    <iframe name="content" src="about:blank" style="width: 80%; height: 100vh; border: none;"></iframe>
+    <iframe name="content" src="about:blank"></iframe>
+    <script>
+        // Обработчик загрузки iframe для установки правильного режима
+        document.querySelectorAll('.function-link').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const href = this.getAttribute('href');
+                document.querySelector('iframe').src = href;
+            });
+        });
+    </script>
 </body>
 </html>
 """)

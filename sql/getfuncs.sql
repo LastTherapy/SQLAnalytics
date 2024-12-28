@@ -6,6 +6,5 @@ SELECT
     pg_catalog.pg_get_functiondef(p.oid) AS function_definition
 FROM pg_proc p
 JOIN pg_namespace n ON p.pronamespace = n.oid
-WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
-  AND n.nspname !~ '^pg_toast'
+WHERE n.nspname = 'your_schema_name'
 ORDER BY schema_name, function_name;
