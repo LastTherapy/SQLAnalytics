@@ -26,9 +26,9 @@
             links.forEach(link => {
                 const functionName = link.getAttribute('data-function');
                 if (mode === 'text') {
-                    link.href = `output/${functionName}_text.html`;
+                    link.href = `output/functions/${functionName}_text.html`;
                 } else {
-                    link.href = `output/${functionName}_visual.html`;
+                    link.href = `output/functions/${functionName}_visual.html`;
                 }
             });
         }

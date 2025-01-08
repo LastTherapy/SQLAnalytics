@@ -15,7 +15,8 @@ class SQLFunction(SQLObject):
                  function_name: str,
                  return_type: str,
                  arguments: List[str],
-                 function_definition: str):
+                 function_definition: str,
+                 overload: int = 1):
         super().__init__(name=function_name, schema_name=schema_name)
         self.function_name: str = function_name
         self.schema_name: str = schema_name
@@ -26,6 +27,7 @@ class SQLFunction(SQLObject):
         # filling by SQLProcessor processing ddl
         self.called_functions: List[str] = []
         self.called_tables: List[str] = []
+        self.overload: int = overload
 
     def __str__(self) -> str:
         return f"{self.schema}.{self.name}"

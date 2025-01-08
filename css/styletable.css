@@ -1,0 +1,113 @@
+/* Общие стили */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    background-color: #f9f9f9;
+}
+
+/* Контейнеры */
+.table-container,
+.functions-container {
+    flex: 1; /* Каждый контейнер занимает равную долю доступного пространства */
+    max-width: 50%; /* Ограничение на ширину 50% */
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; /* Скролл, если контент превышает высоту */
+    max-height: 80vh;
+}
+
+/* Заголовки */
+h1 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 20px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+/* Стили таблицы */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f4f4f4;
+    color: #333;
+    font-weight: bold;
+    text-align: left;
+    padding: 10px;
+}
+
+td {
+    background-color: #fff;
+    color: #555;
+    padding: 10px;
+    text-align: left;
+}
+
+/* Ссылки на функции */
+.function-link {
+    background-color: #d0f0d0; /* Светло-зелёный фон */
+    padding: 5px 8px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333; /* Тёмный текст */
+    display: inline-block;
+    margin: 5px 0;
+    transition: background-color 0.3s, color 0.3s; /* Плавный переход */
+}
+
+.function-link:hover {
+    background-color: #28a745; /* Тёмно-зелёный при наведении */
+    color: #fff; /* Белый текст */
+}
+
+/* Стили списка функций */
+.functions-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.functions-list li {
+    margin-bottom: 10px;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    .table-container,
+    .functions-container {
+        width: 100%; /* На мобильных устройствах контейнеры занимают всю ширину */
+        max-width: none;
+    }
+}
+
+.schema-function-list {
+    list-style-type: none;
+    padding-left: 20px;
+}
+
+.schema-function-list li {
+    margin-bottom: 10px;
+}

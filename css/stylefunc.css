@@ -111,36 +111,37 @@ p {
     color: #fff; /* Белый текст при наведении */
 }
 
+.table-link {
+    background-color: #76f6e3; /* Светло-зелёный фон */
+    padding: 2px 4px; /* Внутренние отступы */
+    border-radius: 4px; /* Скругленные углы */
+    text-decoration: none; /* Убираем подчеркивание */
+    color: #333; /* Тёмный текст */
+    display: inline-block; /* Вспомогательный стиль для удобства */
+    transition: background-color 0.3s, color 0.3s; /* Плавный переход стилей */
+}
+
+.table-link:hover {
+    background-color: #148877; /* Тёмно-зелёный при наведении */
+    color: #fff; /* Белый текст при наведении */
+}
+
 .sql-comment {
     color: #6c757d; /* Серый цвет текста */
     font-style: italic; /* Курсив */
     display: block; /* Отображение как отдельный блок */
     margin: 2px 0; /* Минимальные отступы сверху и снизу */
 }
-/*.switch-button {*/
-/*            position: fixed;*/
-/*            top: 10px;*/
-/*            right: 10px;*/
-/*            padding: 10px 15px;*/
-/*            background-color: #007BFF;*/
-/*            color: white;*/
-/*            text-decoration: none;*/
-/*            border-radius: 5px;*/
-/*}*/
-/*.switch-button {*/
-/*    position: fixed;*/
-/*    top: 10px;*/
-/*    right: 10px;*/
-/*    padding: 10px 15px;*/
-/*    background-color: #007BFF;*/
-/*    color: white;*/
-/*    text-decoration: none;*/
-/*    border-radius: 5px;*/
-/*    font-size: 14px;*/
-/*    cursor: pointer;*/
-/*    transition: background-color 0.3s ease;*/
-/*}*/
+
 
 .switch-button:hover {
     background-color: #0056b3;
+}
+
+.table-link {
+    text-decoration: none;
+    color: inherit;
+}
+.table-link:hover {
+    text-decoration: underline;
 }
