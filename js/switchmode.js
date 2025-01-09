@@ -21,17 +21,40 @@
             }
         }
 
+        // function updateLinks() {
+            // const links = document.querySelectorAll('.function-link');
+            // links.forEach(link => {
+            //     const functionName = link.getAttribute('data-function');
+            //     if (mode === 'text') {
+            //         link.href = `output/functions/${functionName}_text.html`;
+            //     } else {
+            //         link.href = `output/functions/${functionName}_visual.html`;
+            //     }
+            // });
+        // }
+
         function updateLinks() {
-            const links = document.querySelectorAll('.function-link');
-            links.forEach(link => {
-                const functionName = link.getAttribute('data-function');
-                if (mode === 'text') {
-                    link.href = `output/functions/${functionName}_text.html`;
-                } else {
-                    link.href = `output/functions/${functionName}_visual.html`;
-                }
-            });
+    // Находим контейнер меню слева
+    const schemaList = document.getElementById('schema-list');
+    if (!schemaList) {
+        console.warn("Контейнер schema-list не найден.");
+        return;
+    }
+
+    // Выбираем только ссылки внутри этого контейнера
+    const links = schemaList.querySelectorAll('.function-link');
+    links.forEach(link => {
+        const functionName = link.getAttribute('data-function');
+        if (!functionName) return;
+
+        if (mode === 'text') {
+            link.href = `output/functions/${functionName}_text.html`;
+        } else {
+            link.href = `output/functions/${functionName}_visual.html`;
         }
+    });
+}
+
 
         window.onload = function() {
             document.getElementById('mode-button').innerText = 'Переключить на визуализацию';

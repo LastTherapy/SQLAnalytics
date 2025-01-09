@@ -11,12 +11,117 @@ from utils.dataloader import load_functions, load_tables
 from model.SQLProcessor import SQLProcessor
 
 
+# def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunction], output_dir: str = 'output') -> None:
+#     """
+#     Генерирует граф зависимостей для функции, включая вызванные функции и таблицы.
+#     """
+#     visited_functions = set()  # Для предотвращения зацикливания
+#     graph_lines = []  # Линии графа для Mermaid
+#
+#     def process_function(current_func: SQLFunction):
+#         if str(current_func) in visited_functions:
+#             return
+#
+#         visited_functions.add(str(current_func))
+#
+#         # Добавляем текущую функцию в граф
+#         graph_lines.append(f"\n{str(current_func)}(({str(current_func)}))")
+#
+#         # Обработка таблиц
+#         for table in current_func.called_tables:
+#             graph_lines.append(f"{str(current_func)} --> {table}[{table}]")
+#
+#         # Обработка вызовов функций
+#         for called_func_name in current_func.called_functions:
+#             if str(called_func_name) in functions.keys():
+#                 called_func = functions[called_func_name]
+#                 graph_lines.append(f"{str(current_func)} --> {str(called_func)}")
+#                 process_function(called_func)  # Рекурсивно обрабатываем вызванную функцию
+#
+#     # Старт обработки с корневой функции
+#     process_function(func)
+#
+#     # Формируем Mermaid граф
+#     graph_content = "\n".join(graph_lines)
+#     html_content = f"""<!DOCTYPE html>
+# <html lang="ru">
+# <head>
+#     <meta charset="utf-8">
+#     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+#     <meta name="viewport" content="width=device-width, initial-scale=1">
+#     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+#     <meta name="msapplication-tap-highlight" content="no">
+#     <link href="../../libs/css/roboto.css" rel="stylesheet">
+#     <link rel="stylesheet" href="../../libs/css/material_icons.css" />
+#     <link rel="stylesheet" href="../../libs/css/select2_material.css" />
+#     <link rel="stylesheet" href="../../libs/css/materialize.css" />
+#     <link rel="stylesheet" href="../../libs/css/font-awesome.css" />
+#     <link href="../../libs/css/mermaid.css" rel="stylesheet" />
+#     <link href="../../libs/css/nv.d3.css" rel="stylesheet" type="text/css">
+#     <link rel="stylesheet" href="../../css/stylefunc.css">
+#     <script src="../../libs/js/mermaid.js"></script>
+#     <script src="../../libs/js/jquery-2.1.1.min.js"></script>
+#     <script src="../../libs/js/materialize.min.js"></script>
+#     <script src="../../libs/js/select2.min.js"></script>
+#     <script src="../../libs/js/d3.min.js" charset="utf-8"></script>
+#     <script src="../../libs/js/nv.d3.js"></script>
+#     <script src="../../js/zoom-script.js" defer></script>
+#     <title>{str(func)} - Граф зависимостей</title>
+# </head>
+# <body>
+#     <div class="zoom-container" id="zoom-container">
+#         <div class="zoom-content" id="zoom-content">
+#             <div class="mermaid">
+#                 graph TB
+#                 {graph_content}
+#             </div>
+#         </div>
+#     </div>
+# </body>
+# </html>
+# """
+#
+#     # Сохраняем HTML файл
+#     output_path = os.path.join(output_dir, f"{str(func)}_visual.html")
+#     try:
+#         with open(output_path, "w", encoding="utf-8") as f:
+#             f.write(html_content)
+#         print(f"Граф для функции {str(func)} успешно сохранён в {output_path}")
+#     except Exception as e:
+#         print(f"Ошибка при сохранении графа для функции {str(func)}: {e}")
+
+
+
 def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunction], output_dir: str = 'output') -> None:
     """
-    Генерирует граф зависимостей для функции, включая вызванные функции и таблицы.
+    Генерирует граф зависимостей для функции, включая вызванные функции и таблицы,
+    с отображением стилей Mermaid и легендой цветов для схем.
     """
+    import hashlib
+
     visited_functions = set()  # Для предотвращения зацикливания
     graph_lines = []  # Линии графа для Mermaid
+    schema_colors = {}  # Цвета для схем
+    node_schema = {}  # Словарь для хранения схем каждого узла
+
+    def get_color(schema: str) -> str:
+        """Генерация цвета на основе схемы."""
+        hash_obj = hashlib.md5(schema.encode('utf-8'))
+        return f"#{hash_obj.hexdigest()[:6]}"
+
+    def get_text_color(hex_color: str) -> str:
+        """
+        Определяет цвет текста (белый или чёрный) в зависимости от яркости фона.
+        Используется формула вычисления относительной яркости.
+        """
+        hex_color = hex_color.lstrip('#')
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+        # Вычисление относительной яркости по стандартной формуле
+        brightness = (r * 299 + g * 587 + b * 114) / 1000
+        # Порог яркости 128 для определения тёмного или светлого цвета
+        return "#FFFFFF" if brightness < 128 else "#000000"
 
     def process_function(current_func: SQLFunction):
         if str(current_func) in visited_functions:
@@ -24,64 +129,124 @@ def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunctio
 
         visited_functions.add(str(current_func))
 
-        # Добавляем текущую функцию в граф
-        graph_lines.append(f"\n{str(current_func)}(({str(current_func)}))")
+        # Разделяем имя функции на схему и имя
+        schema, _, name = str(current_func).partition('.')
+        graph_lines.append(f"{name}(({name}))")
+        node_schema[name] = schema  # сохраняем схему для узла
+        if schema not in schema_colors:
+            schema_colors[schema] = get_color(schema)
 
         # Обработка таблиц
         for table in current_func.called_tables:
-            graph_lines.append(f"{str(current_func)} --> {table}[{table}]")
+            table_schema, _, table_name = table.partition('.')
+            graph_lines.append(f"{name} --> {table_name}[{table_name}]")
+            node_schema[table_name] = table_schema  # сохраняем схему для таблицы
+            if table_schema not in schema_colors:
+                schema_colors[table_schema] = get_color(table_schema)
 
         # Обработка вызовов функций
         for called_func_name in current_func.called_functions:
-            if str(called_func_name) in functions.keys():
+            if called_func_name in functions:
                 called_func = functions[called_func_name]
-                graph_lines.append(f"{str(current_func)} --> {str(called_func)}")
-                process_function(called_func)  # Рекурсивно обрабатываем вызванную функцию
+                called_schema, _, called_name = str(called_func).partition('.')
+                graph_lines.append(f"{name} --> {called_name}")
+                if called_schema not in schema_colors:
+                    schema_colors[called_schema] = get_color(called_schema)
+                process_function(called_func)  # рекурсивная обработка вызванной функции
 
-    # Старт обработки с корневой функции
+    # Начало обработки с корневой функции
     process_function(func)
 
-    # Формируем Mermaid граф
+    # Добавление инструкций стилей для каждого узла после определения структуры графа
+    for node, schema in node_schema.items():
+        bg_color = schema_colors.get(schema, "#FFFFFF")  # цвет фона по умолчанию белый
+        text_color = get_text_color(bg_color)            # определение цвета текста
+        # Добавляем инструкцию стиля для узла с установкой цвета заливки и текста
+        graph_lines.append(
+            f"style {node} fill:{bg_color},stroke:#333,stroke-width:2px,color:{text_color}"
+        )
+
+    # Формируем Mermaid-граф
     graph_content = "\n".join(graph_lines)
+
+    # Создание легенды
+    legend_content = "\n".join(
+        [f'<div style="display:inline-block; padding:5px; background-color:{color}; color:white; margin:5px; border-radius:5px;">{schema}</div>'
+         for schema, color in schema_colors.items()]
+    )
+
+    # Обновлённый HTML-контент с интеграцией zoom-container и zoom-content
+    # ... предыдущий код функции generate_dependency_graph ...
+
+    # Обновлённый HTML-контент с интеграцией zoom-container и zoom-content
     html_content = f"""<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="msapplication-tap-highlight" content="no">
-    <link href="../../libs/css/roboto.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../libs/css/material_icons.css" />
-    <link rel="stylesheet" href="../../libs/css/select2_material.css" />
-    <link rel="stylesheet" href="../../libs/css/materialize.css" />
-    <link rel="stylesheet" href="../../libs/css/font-awesome.css" />
-    <link href="../../libs/css/mermaid.css" rel="stylesheet" />
-    <link href="../../libs/css/nv.d3.css" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="../../css/stylefunc.css">
-    <script src="../../libs/js/mermaid.js"></script>
-    <script src="../../libs/js/jquery-2.1.1.min.js"></script>
-    <script src="../../libs/js/materialize.min.js"></script>
-    <script src="../../libs/js/select2.min.js"></script>
-    <script src="../../libs/js/d3.min.js" charset="utf-8"></script>
-    <script src="../../libs/js/nv.d3.js"></script>
-    <script src="../../js/zoom-script.js" defer></script>
-    <title>{str(func)} - Граф зависимостей</title>
-</head>
-<body>
-    <div class="zoom-container" id="zoom-container">
-        <div class="zoom-content" id="zoom-content">
-            <div class="mermaid">
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <title>{str(func)} - Граф зависимостей</title>
+        <!-- Подключение Mermaid.js -->
+        <script src="../../libs/js/mermaid.min.js"></script> 
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {{
+                mermaid.initialize({{ startOnLoad: true }});
+            }});
+        </script>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 0; 
+                padding: 0;
+            }}
+            .legend {{
+                margin: 20px;
+            }}
+            /* Контейнер для зума: занимает всю ширину, без рамки, с горизонтальной прокруткой */
+            #zoom-container {{
+                width: 100%;
+                height: 100vh; /* Можно настроить высоту по необходимости */
+                overflow-x: auto; /* горизонтальная прокрутка */
+                overflow-y: hidden; /* скрыть вертикальную прокрутку, если не нужна */
+                position: relative;
+                border: none; /* убираем рамку */
+                margin: 0;
+                padding: 0;
+            }}
+            /* Контейнер с контентом внутри зума */
+            #zoom-content {{
+                width: 100%;
+                height: 100%;
+                transform-origin: 0 0;
+            }}
+            /* Стиль для Mermaid-блока */
+            .mermaid {{
+                width: 100%;
+                height: 100%;
+            }}
+            svg {{
+                background-color: #ffffff;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="legend">
+            {legend_content}
+        </div>
+        <div id="zoom-container">
+            <div id="zoom-content" class="mermaid">
                 graph TB
                 {graph_content}
             </div>
         </div>
-    </div>
-</body>
-</html>
-"""
 
-    # Сохраняем HTML файл
+        <script src="../../js/zoom-script.js"></script>
+    </body>
+    </html>
+    """
+
+    # Убедимся, что директория для вывода существует
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Сохранение HTML-файла
     output_path = os.path.join(output_dir, f"{str(func)}_visual.html")
     try:
         with open(output_path, "w", encoding="utf-8") as f:
@@ -89,6 +254,8 @@ def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunctio
         print(f"Граф для функции {str(func)} успешно сохранён в {output_path}")
     except Exception as e:
         print(f"Ошибка при сохранении графа для функции {str(func)}: {e}")
+
+
 
 
 def generate_html_text_page(func: SQLFunction, output_dir: str) -> None:
@@ -431,8 +598,8 @@ def generate_function_htmls(functions: Dict[str, 'SQLFunction'],
 <body>
     <div class="header-container">
         <div class="switch-container">
-            <button id="mode-button" class="switch-button" onclick="switchMode()">Переключить на визуализацию</button>
-        </div>
+    <button id="mode-button" class="switch-button" type="button" onclick="switchMode()">Переключить на визуализацию</button>
+</div>
     </div>
     <nav>
         <div class="switch-container">
