@@ -145,3 +145,29 @@ p {
 .table-link:hover {
     text-decoration: underline;
 }
+
+
+/*BUTTON*/
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f4f4f4;
+            border-bottom: 1px solid #ccc;
+        }
+        .switch-container {
+            display: flex;
+            gap: 10px;
+        }
+        .switch-button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .switch-button:hover {
+            background-color: #0056b3;
+        }

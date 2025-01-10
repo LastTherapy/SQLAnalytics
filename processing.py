@@ -1,95 +1,12 @@
 import os
-import re
-import json
 import time
+import hashlib
 from typing import List, Dict
 
-# Предполагается, что SQLFunction и SQLTable импортируются корректно
 from model.SQLFunction import SQLFunction
 from model.SQLTable import SQLTable
 from utils.dataloader import load_functions, load_tables
 from model.SQLProcessor import SQLProcessor
-
-
-# def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunction], output_dir: str = 'output') -> None:
-#     """
-#     Генерирует граф зависимостей для функции, включая вызванные функции и таблицы.
-#     """
-#     visited_functions = set()  # Для предотвращения зацикливания
-#     graph_lines = []  # Линии графа для Mermaid
-#
-#     def process_function(current_func: SQLFunction):
-#         if str(current_func) in visited_functions:
-#             return
-#
-#         visited_functions.add(str(current_func))
-#
-#         # Добавляем текущую функцию в граф
-#         graph_lines.append(f"\n{str(current_func)}(({str(current_func)}))")
-#
-#         # Обработка таблиц
-#         for table in current_func.called_tables:
-#             graph_lines.append(f"{str(current_func)} --> {table}[{table}]")
-#
-#         # Обработка вызовов функций
-#         for called_func_name in current_func.called_functions:
-#             if str(called_func_name) in functions.keys():
-#                 called_func = functions[called_func_name]
-#                 graph_lines.append(f"{str(current_func)} --> {str(called_func)}")
-#                 process_function(called_func)  # Рекурсивно обрабатываем вызванную функцию
-#
-#     # Старт обработки с корневой функции
-#     process_function(func)
-#
-#     # Формируем Mermaid граф
-#     graph_content = "\n".join(graph_lines)
-#     html_content = f"""<!DOCTYPE html>
-# <html lang="ru">
-# <head>
-#     <meta charset="utf-8">
-#     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-#     <meta name="viewport" content="width=device-width, initial-scale=1">
-#     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-#     <meta name="msapplication-tap-highlight" content="no">
-#     <link href="../../libs/css/roboto.css" rel="stylesheet">
-#     <link rel="stylesheet" href="../../libs/css/material_icons.css" />
-#     <link rel="stylesheet" href="../../libs/css/select2_material.css" />
-#     <link rel="stylesheet" href="../../libs/css/materialize.css" />
-#     <link rel="stylesheet" href="../../libs/css/font-awesome.css" />
-#     <link href="../../libs/css/mermaid.css" rel="stylesheet" />
-#     <link href="../../libs/css/nv.d3.css" rel="stylesheet" type="text/css">
-#     <link rel="stylesheet" href="../../css/stylefunc.css">
-#     <script src="../../libs/js/mermaid.js"></script>
-#     <script src="../../libs/js/jquery-2.1.1.min.js"></script>
-#     <script src="../../libs/js/materialize.min.js"></script>
-#     <script src="../../libs/js/select2.min.js"></script>
-#     <script src="../../libs/js/d3.min.js" charset="utf-8"></script>
-#     <script src="../../libs/js/nv.d3.js"></script>
-#     <script src="../../js/zoom-script.js" defer></script>
-#     <title>{str(func)} - Граф зависимостей</title>
-# </head>
-# <body>
-#     <div class="zoom-container" id="zoom-container">
-#         <div class="zoom-content" id="zoom-content">
-#             <div class="mermaid">
-#                 graph TB
-#                 {graph_content}
-#             </div>
-#         </div>
-#     </div>
-# </body>
-# </html>
-# """
-#
-#     # Сохраняем HTML файл
-#     output_path = os.path.join(output_dir, f"{str(func)}_visual.html")
-#     try:
-#         with open(output_path, "w", encoding="utf-8") as f:
-#             f.write(html_content)
-#         print(f"Граф для функции {str(func)} успешно сохранён в {output_path}")
-#     except Exception as e:
-#         print(f"Ошибка при сохранении графа для функции {str(func)}: {e}")
-
 
 
 def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunction], output_dir: str = 'output') -> None:
@@ -97,7 +14,6 @@ def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunctio
     Генерирует граф зависимостей для функции, включая вызванные функции и таблицы,
     с отображением стилей Mermaid и легендой цветов для схем.
     """
-    import hashlib
 
     visited_functions = set()  # Для предотвращения зацикливания
     graph_lines = []  # Линии графа для Mermaid
@@ -184,6 +100,7 @@ def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunctio
     <head>
         <meta charset="UTF-8">
         <title>{str(func)} - Граф зависимостей</title>
+        <link rel="stylesheet" href="../../css/graph.css">
         <!-- Подключение Mermaid.js -->
         <script src="../../libs/js/mermaid.min.js"></script> 
         <script>
@@ -191,54 +108,27 @@ def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunctio
                 mermaid.initialize({{ startOnLoad: true }});
             }});
         </script>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                margin: 0; 
-                padding: 0;
-            }}
-            .legend {{
-                margin: 20px;
-            }}
-            /* Контейнер для зума: занимает всю ширину, без рамки, с горизонтальной прокруткой */
-            #zoom-container {{
-                width: 100%;
-                height: 100vh; /* Можно настроить высоту по необходимости */
-                overflow-x: auto; /* горизонтальная прокрутка */
-                overflow-y: hidden; /* скрыть вертикальную прокрутку, если не нужна */
-                position: relative;
-                border: none; /* убираем рамку */
-                margin: 0;
-                padding: 0;
-            }}
-            /* Контейнер с контентом внутри зума */
-            #zoom-content {{
-                width: 100%;
-                height: 100%;
-                transform-origin: 0 0;
-            }}
-            /* Стиль для Mermaid-блока */
-            .mermaid {{
-                width: 100%;
-                height: 100%;
-            }}
-            svg {{
-                background-color: #ffffff;
-            }}
-        </style>
     </head>
     <body>
+        <div class="switch-container" style="float: right;">
+            <a id="mode-button" 
+       class="switch-button" 
+       href="{str(func)}_text.html" 
+       >
+        Переключить на текст
+    </a>
+    </div>      
         <div class="legend">
             {legend_content}
-        </div>
+        </div>   
         <div id="zoom-container">
             <div id="zoom-content" class="mermaid">
                 graph TB
                 {graph_content}
             </div>
         </div>
-
         <script src="../../js/zoom-script.js"></script>
+        <script src="../../js/frames.js" defer></script>
     </body>
     </html>
     """
@@ -256,6 +146,110 @@ def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunctio
         print(f"Ошибка при сохранении графа для функции {str(func)}: {e}")
 
 
+def generate_function_htmls(functions: Dict[str, 'SQLFunction'],
+                            tables: Dict[str, 'SQLTable'],
+                            output_dir="output",
+                            index_file="index.html"):
+    """
+    Генерирует HTML-страницу со списком функций и таблиц, сгруппированных по схемам (слева),
+    а также iframe (справа). Добавлены кнопки "Свернуть все", "Развернуть все" и переключения визуализации.
+    """
+    print(f"Создаём директории под странички, если их нет")
+    os.makedirs(output_dir, exist_ok=True)
+    functions_output_dir = os.path.join(output_dir, "functions")
+    os.makedirs(functions_output_dir, exist_ok=True)
+    table_output_dir = os.path.join(output_dir, "tables")
+    os.makedirs(table_output_dir, exist_ok=True)
+
+    # Генерация HTML-страниц для каждой функции
+    for func in functions.values():
+        generate_html_text_page(func, functions_output_dir)
+
+    # Генерация HTML-страниц для каждой таблицы
+    for table_name, table in tables.items():
+        generate_table_html_page(table, functions, table_output_dir)
+
+    # Сгруппированные функции по схемам
+    schema_functions: Dict[str, List[SQLFunction]] = {}
+    for func in functions.values():
+        schema_functions.setdefault(func.schema, []).append(func)
+
+    # Сгруппированные таблицы по схемам
+    schema_tables: Dict[str, List[SQLTable]] = {}
+    for table in tables.values():
+        schema_tables.setdefault(table.schema_name, []).append(table)
+
+    print(f"Формируем главный файл '{index_file}'.")
+    try:
+        with open(index_file, "w", encoding="utf-8") as f:
+            f.write("""<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/stylefunc.css">
+    <link rel="stylesheet" href="css/switchmode.css">
+    <script src="js/leftmenu.js" defer></script>
+    <script src="js/switchmode.js" defer></script> 
+</head>
+<body>
+    <div class="header-container">
+    </div>
+    <nav>
+        <div class="switch-container">
+            <button id="expand-all" onclick="expandAll()">Развернуть все</button>
+            <button id="collapse-all" onclick="collapseAll()">Свернуть все</button>
+        </div>
+        <div id="schema-list">
+""")
+            # Генерация списка функций
+            f.write("<h2>Список функций</h2>\n")
+            for schema_name, schema_functions_list in schema_functions.items():
+                f.write(f"""
+            <div class="schema">
+                <div class="schema-header" onclick="toggleSchema('{schema_name}_functions')">{schema_name}</div>
+                <ul class="function-list" id="list-{schema_name}_functions">
+""")
+                for function in schema_functions_list:
+                    overload_text = f" ({function.overload})" if function.overload > 1 else ""
+                    f.write(
+                        f'                    <li><a href="{output_dir}/functions/{str(function)}_text.html" target="content" class="function-link" data-function="{str(function)}">'
+                        f'{function.name}{overload_text}</a></li>\n'
+                    )
+                f.write("""
+                </ul>
+            </div>
+""")
+
+            # Генерация списка таблиц
+            f.write("<h2>Список таблиц</h2>\n")
+            for schema_name, schema_tables_list in schema_tables.items():
+                f.write(f"""
+            <div class="schema">
+                <div class="schema-header" onclick="toggleSchema('{schema_name}_tables')">{schema_name}</div>
+                <ul class="table-list" id="list-{schema_name}_tables">
+""")
+                for table in schema_tables_list:
+                    f.write(
+                        f'                    <li><a href="output/tables/{str(table)}.html" target="content" class="table-link" data-table="{str(table)}">'
+                        f'{table.name}</a></li>\n'
+                    )
+                f.write("""
+                </ul>
+            </div>
+""")
+            f.write("""
+        </div>
+    </nav>
+    <iframe name="content" src="about:blank"></iframe>
+</body>
+</html>
+""")
+    except Exception as e:
+        print(f"Ошибка при записи главной страницы {index_file}: {e}")
+
+    print(f"Готово. Все HTML-страницы сгенерированы в директории: '{output_dir}'.")
 
 
 def generate_html_text_page(func: SQLFunction, output_dir: str) -> None:
@@ -267,21 +261,32 @@ def generate_html_text_page(func: SQLFunction, output_dir: str) -> None:
     try:
         with open(text_html_path, "w", encoding="utf-8") as f:
             f.write(f"""<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../css/stylefunc.css">
-    <script src="../../js/tooltip.js"></script>
-    <script src="../../js/frames.js"></script>
-    <title>{str(func)}</title>
-</head>
-<body>
-    <h1>{str(func)}</h1>
-    <pre>{func.function_definition}</pre>
-</body>
-</html>
-""")
+        <html lang="ru">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="stylesheet" href="../../css/stylefunc.css">
+            <script src="../../js/tooltip.js"></script>
+            <title>{str(func)}</title>
+        </head>
+        <body>
+            <div class="header">                
+<div class="switch-container" style="float: right;">
+    <a id="mode-button" 
+       class="switch-button" 
+       href="{str(func)}_visual.html" 
+       >
+        Переключить на визуализацию
+    </a>
+</div>   
+            <h1>{str(func)}</h1>
+           </div>
+            <pre>{func.function_definition}</pre>
+            
+            <script src="../../js/frames.js" defer></script>
+        </body>
+        </html>
+    """)
     except Exception as e:
         print(f"Ошибка при записи файлов для функции {str(func)}: {e}")
 
@@ -388,273 +393,6 @@ def generate_table_html_page(table: SQLTable, functions: Dict[str, 'SQLFunction'
 </html>
 """)
     print(f"HTML page generated for table '{table.name}' at {table_file_path}")
-
-
-#
-# def generate_function_htmls(functions: Dict[str, 'SQLFunction'],
-#                             tables: Dict[str, 'SQLTable'],
-#                             output_dir="output",
-#                             index_file="index.html"):
-#     """
-#     Генерирует HTML-страницу со списком функций и таблиц, сгруппированных по схемам (слева),
-#     а также iframe (справа). Добавлены кнопки "Свернуть все", "Развернуть все" и переключения визуализации.
-#     """
-#     print(f"Создаём директории под странички, еесли их нет")
-#     os.makedirs(output_dir, exist_ok=True)
-#     functions_output_dir = os.path.join(output_dir, "functions")
-#     os.makedirs(functions_output_dir, exist_ok=True)
-#     table_output_dir = os.path.join(output_dir, "tables")
-#     os.makedirs(table_output_dir, exist_ok=True)
-#
-#     # Генерация HTML-страниц для каждой функции
-#     for func in functions.values():
-#         generate_html_text_page(func, functions_output_dir)
-#
-#     # Генерация HTML-страниц для каждой таблицы
-#     for table_name, table in tables.items():
-#         generate_table_html_page(table, functions, table_output_dir)
-#
-#     # Сгруппированные функции по схемам
-#     schema_functions: Dict[str, List[SQLFunction]] = {}
-#     for func in functions.values():
-#         schema_functions.setdefault(func.schema, []).append(func)
-#
-#     # Сгруппированные таблицы по схемам
-#     schema_tables: Dict[str, List[SQLTable]] = {}
-#     for table in tables.values():
-#         schema_tables.setdefault(table.schema_name, []).append(table)
-#
-#     print(f"Формируем главный файл '{index_file}'.")
-#     try:
-#         with open(index_file, "w", encoding="utf-8") as f:
-#             f.write("""<!DOCTYPE html>
-# <html lang="ru">
-# <head>
-#     <meta charset="UTF-8">
-#     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-#     <link rel="stylesheet" href="css/style.css">
-#     <link rel="stylesheet" href="css/stylefunc.css">
-#     <link rel="stylesheet" href="css/switchmode.css">
-#     <script src="js/leftmenu.js" defer></script>
-#     <script src="js/switchmode.js" defer></script>
-#     <style>
-#         .header-container {
-#             display: flex;
-#             justify-content: space-between;
-#             align-items: center;
-#             background-color: #f4f4f4;
-#             border-bottom: 1px solid #ccc;
-#         }
-#         .switch-container {
-#             display: flex;
-#             gap: 10px;
-#         }
-#         .switch-button {
-#             background-color: #007bff;
-#             color: #fff;
-#             border: none;
-#             padding: 10px 20px;
-#             border-radius: 5px;
-#             cursor: pointer;
-#             transition: background-color 0.3s ease;
-#         }
-#         .switch-button:hover {
-#             background-color: #0056b3;
-#         }
-#     </style>
-# </head>
-# <body>
-#     <div class="header-container">
-#         <div class="switch-container">
-#             <button id="mode-button" class="switch-button" onclick="switchMode()">Переключить на визуализацию</button>
-#         </div>
-#     </div>
-#     <nav>
-#         <div class="switch-container">
-#             <button id="expand-all" onclick="expandAll()">Развернуть все</button>
-#             <button id="collapse-all" onclick="collapseAll()">Свернуть все</button>
-#         </div>
-#         <div id="schema-list">
-# """)
-#             # Генерация списка функций
-#             f.write("<h2>Список функций</h2>\n")
-#             for schema_name, schema_functions_list in schema_functions.items():
-#                 f.write(f"""
-#             <div class="schema">
-#                 <div class="schema-header" onclick="toggleSchema('{schema_name}_functions')">{schema_name}</div>
-#                 <ul class="function-list" id="list-{schema_name}_functions">
-# """)
-#                 for function in schema_functions_list:
-#                     f.write(
-#                         f'                    <li><a href="{output_dir}/functions/{str(function)}_text.html" target="content" class="function-link" data-function="{str(function)}">'
-#                         f'{function.name}</a></li>\n'
-#                     )
-#                 f.write("""
-#                 </ul>
-#             </div>
-# """)
-#
-#             # Генерация списка таблиц
-#             f.write("<h2>Список таблиц</h2>\n")
-#             for schema_name, schema_tables_list in schema_tables.items():
-#                 f.write(f"""
-#             <div class="schema">
-#                 <div class="schema-header" onclick="toggleSchema('{schema_name}_tables')">{schema_name}</div>
-#                 <ul class="table-list" id="list-{schema_name}_tables">
-# """)
-#                 for table in schema_tables_list:
-#                     f.write(
-#                         f'                    <li><a href="output/tables/{str(table)}.html" target="content" class="table-link" data-table="{str(table)}">'
-#                         f'{table.name}</a></li>\n'
-#                     )
-#                 f.write("""
-#                 </ul>
-#             </div>
-# """)
-#             f.write("""
-#         </div>
-#     </nav>
-#     <iframe name="content" src="about:blank"></iframe>
-# </body>
-# </html>
-# """)
-#     except Exception as e:
-#         print(f"Ошибка при записи главной страницы {index_file}: {e}")
-#
-#     print(f"Готово. Все HTML-страницы сгенерированы в директории: '{output_dir}'.")
-
-def generate_function_htmls(functions: Dict[str, 'SQLFunction'],
-                            tables: Dict[str, 'SQLTable'],
-                            output_dir="output",
-                            index_file="index.html"):
-    """
-    Генерирует HTML-страницу со списком функций и таблиц, сгруппированных по схемам (слева),
-    а также iframe (справа). Добавлены кнопки "Свернуть все", "Развернуть все" и переключения визуализации.
-    """
-    print(f"Создаём директории под странички, если их нет")
-    os.makedirs(output_dir, exist_ok=True)
-    functions_output_dir = os.path.join(output_dir, "functions")
-    os.makedirs(functions_output_dir, exist_ok=True)
-    table_output_dir = os.path.join(output_dir, "tables")
-    os.makedirs(table_output_dir, exist_ok=True)
-
-    # Генерация HTML-страниц для каждой функции
-    for func in functions.values():
-        generate_html_text_page(func, functions_output_dir)
-
-    # Генерация HTML-страниц для каждой таблицы
-    for table_name, table in tables.items():
-        generate_table_html_page(table, functions, table_output_dir)
-
-    # Сгруппированные функции по схемам
-    schema_functions: Dict[str, List[SQLFunction]] = {}
-    for func in functions.values():
-        schema_functions.setdefault(func.schema, []).append(func)
-
-    # Сгруппированные таблицы по схемам
-    schema_tables: Dict[str, List[SQLTable]] = {}
-    for table in tables.values():
-        schema_tables.setdefault(table.schema_name, []).append(table)
-
-    print(f"Формируем главный файл '{index_file}'.")
-    try:
-        with open(index_file, "w", encoding="utf-8") as f:
-            f.write("""<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/stylefunc.css">
-    <link rel="stylesheet" href="css/switchmode.css">
-    <script src="js/leftmenu.js" defer></script>
-    <script src="js/switchmode.js" defer></script>
-    <style>
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #f4f4f4;
-            border-bottom: 1px solid #ccc;
-        }
-        .switch-container {
-            display: flex;
-            gap: 10px;
-        }
-        .switch-button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .switch-button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <div class="header-container">
-        <div class="switch-container">
-    <button id="mode-button" class="switch-button" type="button" onclick="switchMode()">Переключить на визуализацию</button>
-</div>
-    </div>
-    <nav>
-        <div class="switch-container">
-            <button id="expand-all" onclick="expandAll()">Развернуть все</button>
-            <button id="collapse-all" onclick="collapseAll()">Свернуть все</button>
-        </div>
-        <div id="schema-list">
-""")
-            # Генерация списка функций
-            f.write("<h2>Список функций</h2>\n")
-            for schema_name, schema_functions_list in schema_functions.items():
-                f.write(f"""
-            <div class="schema">
-                <div class="schema-header" onclick="toggleSchema('{schema_name}_functions')">{schema_name}</div>
-                <ul class="function-list" id="list-{schema_name}_functions">
-""")
-                for function in schema_functions_list:
-                    overload_text = f" ({function.overload})" if function.overload > 1 else ""
-                    f.write(
-                        f'                    <li><a href="{output_dir}/functions/{str(function)}_text.html" target="content" class="function-link" data-function="{str(function)}">'
-                        f'{function.name}{overload_text}</a></li>\n'
-                    )
-                f.write("""
-                </ul>
-            </div>
-""")
-
-            # Генерация списка таблиц
-            f.write("<h2>Список таблиц</h2>\n")
-            for schema_name, schema_tables_list in schema_tables.items():
-                f.write(f"""
-            <div class="schema">
-                <div class="schema-header" onclick="toggleSchema('{schema_name}_tables')">{schema_name}</div>
-                <ul class="table-list" id="list-{schema_name}_tables">
-""")
-                for table in schema_tables_list:
-                    f.write(
-                        f'                    <li><a href="output/tables/{str(table)}.html" target="content" class="table-link" data-table="{str(table)}">'
-                        f'{table.name}</a></li>\n'
-                    )
-                f.write("""
-                </ul>
-            </div>
-""")
-            f.write("""
-        </div>
-    </nav>
-    <iframe name="content" src="about:blank"></iframe>
-</body>
-</html>
-""")
-    except Exception as e:
-        print(f"Ошибка при записи главной страницы {index_file}: {e}")
-
-    print(f"Готово. Все HTML-страницы сгенерированы в директории: '{output_dir}'.")
 
 
 def format_elapsed_time(elapsed_time):

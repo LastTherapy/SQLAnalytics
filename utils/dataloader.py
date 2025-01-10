@@ -5,6 +5,7 @@ import json
 from model.SQLFunction import SQLFunction
 from model.SQLTable import SQLTable
 
+
 def load_functions() -> Dict[str, 'SQLFunction']:
     """
     Загружает данные из JSON-файлов в объекты SQLFunction и возвращает их в виде словаря.
@@ -46,33 +47,6 @@ def load_functions() -> Dict[str, 'SQLFunction']:
                         )
 
     return functions
-
-
-# def load_functions() -> Tuple[Dict[str, SQLFunction], Dict[str, List[SQLFunction]]]:
-#     """Загружает данные из JSON-файлов в объекты SQLFunction и возвращает их в виде словаря."""
-#     datapath = path.abspath(path.dirname(__file__))
-#     datapath = os.path.dirname(datapath)
-#     filepath = os.path.join(datapath, 'data', 'functions')
-#     datalist = os.listdir(filepath)
-#     functions: Dict[str, SQLFunction] = {}
-#     schema_functions: Dict[str, List[SQLFunction]] = {}
-#
-#     for file in datalist:
-#         if file.endswith('.json'):
-#             with open(os.path.join(filepath, file), 'r') as f:
-#                 data = json.loads(f.read())
-#                 for entry in data:
-#                     key = f"{entry['schema_name'].lower()}.{entry['function_name'].lower()}"
-#                     fc: SQLFunction = SQLFunction(
-#                         schema_name=entry['schema_name'],
-#                         function_name=entry['function_name'],
-#                         return_type=entry['return_type'],
-#                         arguments=[a.strip().split(' ')[0] for a in entry['arguments'].split(',')],
-#                         function_definition=entry['function_definition'],
-#                     )
-#                     schema_functions.setdefault(entry['schema_name'], []).append(fc)
-#                     functions[key] = fc
-#     return functions, schema_functions
 
 
 def parse_list_from_string(value: str) -> List[str]:

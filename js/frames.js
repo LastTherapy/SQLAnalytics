@@ -13,3 +13,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+
+    function requestModeSwitch() {
+        // Отправляем запрос родителю на переключение режима
+        parent.postMessage('switchMode', '*');
+    }
+
+    // Слушатель для получения команды обновить страницу
+    window.addEventListener('message', (event) => {
+        if (event.data === 'updatePage') {
+            const currentUrl = window.location.href;
+            let newUrl;
+            if (currentUrl.includes("_text.html")) {
+                newUrl = currentUrl.replace("_text.html", "_visual.html");
+            } else if (currentUrl.includes("_visual.html")) {
+                newUrl = currentUrl.replace("_visual.html", "_text.html");
+            }
+            if (newUrl) {
+                window.location.href = newUrl;
+            }
+        }
+    });
+
