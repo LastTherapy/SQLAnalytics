@@ -276,7 +276,7 @@ def generate_html_text_page(func: SQLFunction, output_dir: str) -> None:
             <script src="../../js/tooltip.js"></script>
             <title>{str(func)}</title>
         </head>
-        <body>
+        <body style="margin: 0; padding: 0;">
             <div class="header">                
 <div class="switch-container" style="float: right;">
     <a id="mode-button" 
