@@ -65,37 +65,7 @@ class SQLProcessor:
             processed += 1
             print(f"Processed {processed} of {total} functions")
 
-    # def wrap_tables(self, text: str) -> Tuple[str, Set[str]]:
-    #     """
-    #     Подсвечивает таблицы как <span class="table-tooltip" ...>.
-    #     Добавляет таблицу в self.called_tables только если она была найдена в тексте.
-    #     """
-    #     tables_in_text: Set[str] = set()
-    #
-    #     def replacer(match):
-    #         table_name = match.group(0)
-    #         tbl = self.tables[table_name.lower()]
-    #
-    #         # Сериализация данных для HTML
-    #         columns_json = json.dumps(tbl.colum_names, ensure_ascii=False)
-    #         types_json = json.dumps(tbl.data_types, ensure_ascii=False)
-    #
-    #         # Генерация HTML с безопасными данными
-    #         replacement = (
-    #             f'<span class="table-tooltip" '
-    #             f'data-columns=\'{columns_json}\' '
-    #             f'data-types=\'{types_json}\'>'
-    #             f'{table_name}'
-    #             f'</span>'
-    #         )
-    #
-    #         # Добавляем таблицу в список, если она была найдена
-    #         tables_in_text.add(table_name)
-    #         return replacement
-    #
-    #     # Проверяем и заменяем все совпадения за один проход
-    #     text = self.table_pattern.sub(replacer, text)
-    #     return text, tables_in_text
+
 
     def wrap_tables(self, text: str) -> Tuple[str, Set[str]]:
         """

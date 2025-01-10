@@ -432,5 +432,6 @@ if __name__ == "__main__":
     for _, func in funcs.items():
         generate_dependency_graph(func, funcs, output_dir="output/functions")
     end_time = time.perf_counter()
+
     elapsed_time = end_time - start_time
     print(format_elapsed_time(elapsed_time))
