@@ -110,23 +110,30 @@ def generate_dependency_graph(func: SQLFunction, functions: Dict[str, SQLFunctio
         </script>
     </head>
     <body>
-        <div class="switch-container" style="float: right;">
-            <a id="mode-button" 
-       class="switch-button" 
-       href="{str(func)}_text.html" 
-       >
-        Переключить на текст
-    </a>
-    </div>      
-        <div class="legend">
-            {legend_content}
-        </div>   
+        <!-- Фиксированная шапка -->
+        <div class="header-container">
+            <!-- Легенда слева -->
+            <div class="legend">
+                {legend_content}
+            </div>
+            <!-- Кнопка(и) справа -->
+            <div class="switch-container">
+                <a id="mode-button"
+                   class="switch-button"
+                   href="{str(func)}_text.html">
+                    Переключить на текст
+                </a>
+            </div>
+        </div>
+
+        <!-- Контейнер с графом -->
         <div id="zoom-container">
             <div id="zoom-content" class="mermaid">
                 graph TB
                 {graph_content}
             </div>
         </div>
+
         <script src="../../js/zoom-script.js"></script>
         <script src="../../js/frames.js" defer></script>
     </body>
